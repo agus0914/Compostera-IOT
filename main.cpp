@@ -135,22 +135,26 @@ void loop() {
   float medTemp, deltaTemp;
 
   bool nuevaTemp, nuevaHum,nuevaPH;
+  if(medHum>limiteHumedad){
+    //el medidor de ph no funciona si no hay suficiente humedad
+      nuevaPH   = MedPH(medPH,deltaPH);
+  }
 
   nuevaTemp = MedTemperatura(medTemp,deltaTemp);
   nuevaHum  = MedHumedad(medHum,deltaTemp);
-  nuevaPH   = MedPH(medPH,deltaPH);
-  //al haber nuevas meciciones se emvian los datos nuevos
-  if (nuevaPH==true){
+
+  
+  //al haber nuevas mediciones se envian los datos nuevos
+  if (nuevaHum==true&&nuevaTemp==true){ 
+    //envio de señal mqtt
     
-    nuevaPH=false;  
-  }
-  if(nuevaHum==true){
+    if(nuevaPH==false&&(medHum>limiteHumedad)){
+        // se envia un mensage de errorpor falta de humedad
 
-    nuevaHum=false;
-  }
-  if(nuevaTemp=true){
-
+    }
     nuevaTemp=false;
+    nuevaTemp=false;
+    nuevaPH  =false;
   }
   //=======control de salidas=======
   ControlMotor();
