@@ -74,14 +74,18 @@ void messageReceived(String &topic, String &payload) {
 
 typedef enum {inicial,espera,midiendo,medido} estadosMed;
 #define DHTTYPE DHT11
-//===============pines de entrad y salida===============
-#define pin_dht 2 
+//===============pines de entrad sensores ===============
+#define pin_dht 34 //este pin tiene que ser digital
+#define pin_PH 33 // este pin tiene que ser analogico
+//===============pines salidas de del sistema===========
 
 DHT dht(pin_dht,DHTTYPE);
 
-Timer timerTemp,timerHumedad;
-void MedTemperatura(float& medProbable,float& delta);
-void MedHumedad(float& medProbable,float& delta);
+Timer timerTemp,timerHumedad,timerPH,timerMotor;
+bool MedTemperatura(float& medProbable,float& delta);
+bool MedHumedad(float& medProbable,float& delta);
+bool MedPH(float& medProbable, float& delta );
+
 
 void setup() {
   dht.begin();
@@ -89,7 +93,7 @@ void setup() {
   pinMode(25,OUTPUT); // Motor
   pinMode(26,OUTPUT); // Aereador
   pinMode(27,OUTPUT); // Bomba
-  pinMode(34,INPUT);  //PH
+  pinMode(pin_PH,INPUT);  //PH
   pinMode(35,INPUT);  //Tapa
 
   pinMode(13,INPUT);  // ECHO
@@ -113,20 +117,34 @@ void loop() {
   if (!client.connected()) {
     connect();
   }
-  float medTemp,deltaTemp;
-  float medHum ,deltaHum;
-  MedTemperatura(medTemp,deltaTemp);
-  MedHumedad(medHum,deltaTemp);
-  
+  //======mediciones=======
+  float medHum , deltaHum;
+  float medPH  , deltaPH;
+  float medTemp, deltaTemp;
+
+  bool nuevaTemp, nuevaHum,nuevaPH;
+
+  nuevaTemp = MedTemperatura(medTemp,deltaTemp);
+  nuevaHum  = MedHumedad(medHum,deltaTemp);
+  nuevaPH   = MedPH(medPH,deltaPH);
+  if (nuevaPH==true&& nuevaPH==true &&  nuevaHum==true){//al haber nuevas meciciones se emvian los datos nuevos
+    
+
+    nuevaHum=false;
+    nuevaPH=false;
+    nuevaTemp=false;
+  }
   
 
 }
 
-void MedTemperatura(float& medProbable,float& delta){
+
+bool MedTemperatura(float& medProbable,float& delta){
   static estadosMed estado =espera;
   static int cantidadMed;
   static float mediciones[10];
   float medMax,medMin; 
+  bool nuevaMedicion=false;
 
   if(estado==inicial){
     timerTemp.Set();
@@ -196,14 +214,17 @@ void MedTemperatura(float& medProbable,float& delta){
       //===================================
   
     estado=espera;
+    nuevaMedicion=true;
   
   }
+  return nuevaMedicion;
 }
-void MedHumedad(float& medProbable,float& delta){
+bool MedHumedad(float& medProbable,float& delta){
   static estadosMed estado =espera;
   static int cantidadMed;
   static float mediciones[10];
   float medMax,medMin; 
+  bool nuevaMedicion=false;
 
   if(estado==inicial){
     timerHumedad.Set();
@@ -277,6 +298,93 @@ void MedHumedad(float& medProbable,float& delta){
       //===================================
   
     estado=espera;
-  
+    nuevaMedicion = true;
   }
+  return nuevaMedicion;
+}
+bool MedPH(float& medProbable, float& delta){
+  static estadosMed estado =espera;
+  static int cantidadMed;
+  static float mediciones[10];
+  float medMax,medMin; 
+  bool nuevaMedicion=false;
+
+  if(estado==inicial){
+    timerPH.Set();
+    estado=espera;
+ 
+
+  }
+  if(estado==espera ) {
+    if(timerPH>1000){
+      estado=midiendo;
+      timerPH.Set();
+      
+    }
+     
+  }
+  if(estado == midiendo) {
+    if(timerPH>10){
+      mediciones [cantidadMed]=(rand()%140)/10.00;
+      /*
+      1023 - analogRead(pHpin)) / 73.07;
+      */
+
+      
+     cantidadMed++;
+     timerPH.Set();
+    }
+    if(cantidadMed==10){
+      estado=medido;
+      cantidadMed=0;
+    }
+   
+
+  }
+  if (estado == medido) {
+    medMax=mediciones[0];
+    medMin=mediciones[0];
+    for(int i=0;i<10;i++){
+
+      if(mediciones[i]>medMax){
+        medMax=mediciones[i];
+    
+      }
+      if(mediciones[i]<medMin){
+        medMin=mediciones[i];
+      }
+    }
+    medProbable=(medMin+medMax)/2.0;
+    
+    delta=medProbable-medMin;
+    if(delta<5){
+    //dado que el margen de error del propio sensor es de 5 grados 
+    //no es coerente que el margen de error de las mediciones se inferior 
+      delta=2;
+    }
+    /*
+    //este seria un simple promedio de las mediciones 
+    for(int i =0;i<10;){
+      medProbable=medProbable+mediciones[i];
+
+    }
+    medProbabable/10;
+    */
+    
+    timerPH.Set();
+     //=====================================
+      Serial.print("medProbable :");
+      Serial.println(medProbable);
+      Serial.print("delta :");      
+      Serial.println(delta);
+      /*for (int i = 0 ;i<10;i++){
+      Serial.print(mediciones[i]);
+      Serial.print(", ");
+      }     */
+      //===================================
+  
+    estado=espera;
+    nuevaMedicion = true;
+  }
+  return nuevaMedicion;
 }
