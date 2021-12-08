@@ -73,11 +73,20 @@ void messageReceived(String &topic, String &payload) {
 
 
 typedef enum {inicial,espera,midiendo,medido} estadosMed;
+typedef enum {inicial,esperando, trabajo}estadoSalidas;
 #define DHTTYPE DHT11
 //===============pines de entrad sensores ===============
 #define pin_dht 34 //este pin tiene que ser digital
 #define pin_PH 33 // este pin tiene que ser analogico
+#define Pin_Tapa 35 
 //===============pines salidas de del sistema===========
+#define pin_Motor 25
+#define pin_Aereador 26
+#define pin_Bomba 27
+
+uint32_t tiempoRemover=172800000 ;//dos dias pasado a milli segundos 
+float limiteHumedad=60.0;//limite inferior 
+float LimiteTemp=65.0;//limite superior
 
 DHT dht(pin_dht,DHTTYPE);
 
@@ -85,16 +94,20 @@ Timer timerTemp,timerHumedad,timerPH,timerMotor;
 bool MedTemperatura(float& medProbable,float& delta);
 bool MedHumedad(float& medProbable,float& delta);
 bool MedPH(float& medProbable, float& delta );
+void ControlMotor();
+void ControlAereador(float temperatura);
+void ControlBomba(float humedad);
+
 
 
 void setup() {
   dht.begin();
   Serial.begin(115200);
-  pinMode(25,OUTPUT); // Motor
-  pinMode(26,OUTPUT); // Aereador
-  pinMode(27,OUTPUT); // Bomba
+  pinMode(pin_Motor,OUTPUT); // Motor
+  pinMode(pin_Aereador,OUTPUT); // Aereador
+  pinMode(pin_Bomba,OUTPUT); // Bomba
   pinMode(pin_PH,INPUT);  //PH
-  pinMode(35,INPUT);  //Tapa
+  pinMode(Pin_Tapa,INPUT);  //Tapa
 
   pinMode(13,INPUT);  // ECHO
   pinMode(12,OUTPUT); // pulse
@@ -106,7 +119,6 @@ void setup() {
   //Configuro Servidor MQTT node Red
   client.begin("192.168.1.135", 1883, net);
   client.onMessage(messageReceived);
-
   connect();
  
 }
@@ -127,14 +139,23 @@ void loop() {
   nuevaTemp = MedTemperatura(medTemp,deltaTemp);
   nuevaHum  = MedHumedad(medHum,deltaTemp);
   nuevaPH   = MedPH(medPH,deltaPH);
-  if (nuevaPH==true&& nuevaPH==true &&  nuevaHum==true){//al haber nuevas meciciones se emvian los datos nuevos
+  //al haber nuevas meciciones se emvian los datos nuevos
+  if (nuevaPH==true){
     
+    nuevaPH=false;  
+  }
+  if(nuevaHum==true){
 
     nuevaHum=false;
-    nuevaPH=false;
+  }
+  if(nuevaTemp=true){
+
     nuevaTemp=false;
   }
-  
+  //=======control de salidas=======
+  ControlMotor();
+  ControlBomba(medHum);
+  ControlAereador(medTemp);
 
 }
 
@@ -387,4 +408,69 @@ bool MedPH(float& medProbable, float& delta){
     nuevaMedicion = true;
   }
   return nuevaMedicion;
+}
+
+void ControlMotor(){
+  static estadoSalidas estado = inicial;
+  if (estado==inicial ){
+    timerMotor.Set();
+    
+    estado = esperando;
+  }
+  if(estado==esperando){
+    if(timerMotor>tiempoRemover&&digitalRead(Pin_Tapa)==LOW){
+
+      estado = trabajo;
+      timerMotor.Set();
+    }
+  }
+  if(estado==trabajo){
+      digitalWrite(pin_Motor,HIGH);
+    if(timerMotor>60000){
+      digitalWrite(pin_Motor,LOW);
+      timerMotor.Set();
+      estado = esperando;
+    }    
+
+  }
+  
+}
+void ControlAereador(float temperatura){
+  static estadoSalidas estado = inicial;
+  if(estado==inicial){
+      estado=esperando;
+  }
+  if(estado==esperando){
+    if(temperatura>LimiteTemp){
+      estado =trabajo;
+    }
+  }
+  if(estado==trabajo){
+    digitalWrite(pin_Aereador,HIGH);
+    if(temperatura<LimiteTemp-15.0){
+      digitalWrite(pin_Aereador,LOW);
+    }  
+    estado=esperando;
+  }
+
+}
+void ControlBomba(float humedad){
+  static estadoSalidas estado=inicial;
+  if(estado==inicial){
+    estado=esperando;
+  }
+  if(estado==esperando){
+    if(humedad<limiteHumedad){
+      
+      estado=trabajo;
+    }
+
+  }
+  if(estado==trabajo){
+    digitalWrite(pin_Bomba,HIGH);
+    if(humedad>limiteHumedad+10){
+      digitalWrite(pin_Bomba,LOW);
+      estado=esperando;
+    }
+  }
 }
