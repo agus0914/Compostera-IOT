@@ -1,5 +1,5 @@
 #include <Arduino.h>
-#include<DHT.h>
+#include <DHT.h>
 #include"Timer.h"
 #include <WiFi.h> //<WiFi101.h>
 #include <MQTT.h>
@@ -38,14 +38,16 @@ void connect() {
   while (!client.connect("arduino")) { //, "public", "public")) {
     Serial.print(".");
     delay(1000);
+    
   }
 
   Serial.println("\nconnected!");
 
 //Suscribimos a los topicos nodered
-  client.subscribe("brillo"); //Motor con PWM
-  client.subscribe("led1");  // Bomba de agua
-  client.subscribe("led2"); // Aereador
+  client.subscribe("limiteHumedad"); //Motor con PWM
+  client.subscribe("limiteTemp");  // Bomba de agua
+  client.subscribe("LimitePH"); // Aereador
+  
 
 }
 
@@ -90,7 +92,7 @@ float LimiteTemp=65.0;//limite superior
 
 DHT dht(pin_dht,DHTTYPE);
 
-Timer timerTemp,timerHumedad,timerPH,timerMotor;
+Timer timerTemp,timerHumedad,timerPH,timerMotor,timerHAlert,timerTAlert;
 bool MedTemperatura(float& medProbable,float& delta);
 bool MedHumedad(float& medProbable,float& delta);
 bool MedPH(float& medProbable, float& delta );
@@ -102,6 +104,7 @@ void ControlBomba(float humedad);
 
 void setup() {
   dht.begin();
+
   Serial.begin(115200);
   pinMode(pin_Motor,OUTPUT); // Motor
   pinMode(pin_Aereador,OUTPUT); // Aereador
@@ -128,6 +131,8 @@ void loop() {
 
   if (!client.connected()) {
     connect();
+    
+    
   }
   //======mediciones=======
   float medHum , deltaHum;
@@ -145,16 +150,24 @@ void loop() {
 
   
   //al haber nuevas mediciones se envian los datos nuevos
-  if (nuevaHum==true&&nuevaTemp==true){ 
-    //envio de señal mqtt
-    
+  if (nuevaHum==true&&nuevaTemp==true){  
     if(nuevaPH==false&&(medHum>limiteHumedad)){
-        // se envia un mensage de errorpor falta de humedad
+        // se envia un mensage de error por falta de humedad
+        client.publish("ph",String());
+    
+      nuevaHum =false;
+      nuevaTemp=false;
+      nuevaPH  =false;
+    }else{
+       //envio de señal mqtt
+       client.publish("ph",String(medPH));
+       client.publish("temp",String(medTemp));
+       client.publish("humedad",String(medHum));
 
+      nuevaHum =false;
+      nuevaTemp=false;
+      nuevaPH  =false;
     }
-    nuevaTemp=false;
-    nuevaTemp=false;
-    nuevaPH  =false;
   }
   //=======control de salidas=======
   ControlMotor();
@@ -176,14 +189,14 @@ bool MedTemperatura(float& medProbable,float& delta){
     estado=espera;
   }
   if(estado==espera ) {
-    if(timerTemp>1000){
+    if(timerTemp>300000){
       estado=midiendo;
       timerTemp.Set();
     }
      
   }
   if(estado == midiendo) {
-    if(timerTemp>10){
+    if(timerTemp>2000){
       mediciones [cantidadMed]=(100+rand()%200)/10.00;
       //mediciones[cantidadMed]=dht.readTemperature();
      cantidadMed++;
@@ -258,7 +271,7 @@ bool MedHumedad(float& medProbable,float& delta){
 
   }
   if(estado==espera ) {
-    if(timerHumedad>1000){
+    if(timerHumedad>300000){
       estado=midiendo;
       timerHumedad.Set();
       
@@ -266,7 +279,7 @@ bool MedHumedad(float& medProbable,float& delta){
      
   }
   if(estado == midiendo) {
-    if(timerHumedad>10){
+    if(timerHumedad>3000){
       mediciones [cantidadMed]=(200+rand()%800)/10.00;
       //mediciones[cantidadMed]=dht.readHumidity();
       
@@ -341,7 +354,7 @@ bool MedPH(float& medProbable, float& delta){
 
   }
   if(estado==espera ) {
-    if(timerPH>1000){
+    if(timerPH>300000){
       estado=midiendo;
       timerPH.Set();
       
@@ -349,7 +362,7 @@ bool MedPH(float& medProbable, float& delta){
      
   }
   if(estado == midiendo) {
-    if(timerPH>10){
+    if(timerPH>3000){
       mediciones [cantidadMed]=(rand()%140)/10.00;
       /*
       1023 - analogRead(pHpin)) / 73.07;
@@ -443,10 +456,14 @@ void ControlAereador(float temperatura){
   static estadoSalidas estado = inicial;
   if(estado==inicial){
       estado=esperando;
+      timerTAlert.Set();
   }
   if(estado==esperando){
     if(temperatura>LimiteTemp){
       estado =trabajo;
+      if(timerTAlert>300000){
+        client.publish("AlertTemp","mucha temp");
+      }
     }
   }
   if(estado==trabajo){
@@ -465,16 +482,20 @@ void ControlBomba(float humedad){
   }
   if(estado==esperando){
     if(humedad<limiteHumedad){
-      
+      timerHAlert.Set();
       estado=trabajo;
     }
 
   }
   if(estado==trabajo){
     digitalWrite(pin_Bomba,HIGH);
+    if(timerHAlert>300000){
+      client.publish("AlertaHum","poca Humedad");
+    }
     if(humedad>limiteHumedad+10){
       digitalWrite(pin_Bomba,LOW);
       estado=esperando;
     }
   }
 }
+
