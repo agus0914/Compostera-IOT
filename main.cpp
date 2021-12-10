@@ -10,18 +10,11 @@ const char pass[] = "cotea01264";
 WiFiClient net;
 MQTTClient client;
 
-const int freq =5000; // freq for PWM
-const int ledChannel = 0; // channel pwm
-const int resolution = 10; // resolution 8,10,12,15
 
-int brightness = 0;    // how bright the LED is
-int fadeAmount = 5;    // how many points to fade the LED by
 
-long duration;
-float distanceCm;
-#define SOUND_SPEED 0.034
-unsigned long lastTime = 0;
-unsigned long timerDelay = 10000;
+
+
+
 
 
 // Chequeo Wifi, Conecto y suscribo a topicos
@@ -66,10 +59,7 @@ void messageReceived(String &topic, String &payload) {
     if (payload=="on") digitalWrite(27, HIGH);
     if (payload=="off") digitalWrite(27, LOW);
   }
-  // Note: Do not use the client in the callback to publish, subscribe or
-  // unsubscribe as it may cause deadlocks when other things arrive while
-  // sending and receiving acknowledgments. Instead, change a global variable,
-  // or push to a queue and handle it in the loop after calling `client.loop()`.
+ 
 }
 
 
@@ -210,6 +200,7 @@ bool MedTemperatura(float& medProbable,float& delta){
 
   }
   if (estado == medido) {
+     /*
     medMax=mediciones[0];
     medMin=mediciones[0];
     for(int i=0;i<10;i++){
@@ -229,22 +220,22 @@ bool MedTemperatura(float& medProbable,float& delta){
     //dado que el margen de error del propio sensor es de 2 grados 
     //no es coerente que el margen de error de las mediciones se inferior 
       delta=2;
-    }
-    /*
+    }*/
+   
     //este seria un simple promedio de las mediciones 
     for(int i =0;i<10;){
       medProbable=medProbable+mediciones[i];
 
     }
     medProbabable/10;
-    */
+    
     
     timerTemp.Set();
      //=====================================
-      Serial.print("medProbable :");
-      Serial.println(medProbable);
-      Serial.print("delta :");      
-      Serial.println(delta);
+      //Serial.print("medProbable :");
+      //Serial.println(medProbable);
+      //Serial.print("delta :");      
+      //Serial.println(delta);
       /*for (int i = 0 ;i<10;i++){
       Serial.print(mediciones[i]);
       Serial.print(", ");
@@ -294,7 +285,7 @@ bool MedHumedad(float& medProbable,float& delta){
 
   }
   if (estado == medido) {
-    medMax=mediciones[0];
+    /*medMax=mediciones[0];
     medMin=mediciones[0];
     for(int i=0;i<10;i++){
 
@@ -313,19 +304,18 @@ bool MedHumedad(float& medProbable,float& delta){
     //dado que el margen de error del propio sensor es de 5 grados 
     //no es coerente que el margen de error de las mediciones se inferior 
       delta=2;
-    }
-    /*
+    }*/
     //este seria un simple promedio de las mediciones 
     for(int i =0;i<10;){
       medProbable=medProbable+mediciones[i];
 
     }
     medProbabable/10;
-    */
+   
     
     timerHumedad.Set();
      //=====================================
-      Serial.print("medProbable :");
+      /*Serial.print("medProbable :");
       Serial.println(medProbable);
       Serial.print("delta :");      
       Serial.println(delta);
@@ -380,7 +370,7 @@ bool MedPH(float& medProbable, float& delta){
 
   }
   if (estado == medido) {
-    medMax=mediciones[0];
+    /*medMax=mediciones[0];
     medMin=mediciones[0];
     for(int i=0;i<10;i++){
 
@@ -399,19 +389,18 @@ bool MedPH(float& medProbable, float& delta){
     //dado que el margen de error del propio sensor es de 5 grados 
     //no es coerente que el margen de error de las mediciones se inferior 
       delta=2;
-    }
-    /*
+    }*/
     //este seria un simple promedio de las mediciones 
     for(int i =0;i<10;){
       medProbable=medProbable+mediciones[i];
 
     }
     medProbabable/10;
-    */
+   
     
     timerPH.Set();
      //=====================================
-      Serial.print("medProbable :");
+     /* Serial.print("medProbable :");
       Serial.println(medProbable);
       Serial.print("delta :");      
       Serial.println(delta);
