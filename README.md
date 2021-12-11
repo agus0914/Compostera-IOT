@@ -1,37 +1,38 @@
 # Compostera-IOT
 ## Proyecto Final de Diplomatura en Programacion Aplicada al Internet de las Cosas (IOT)
 
+# Compostera-IOT
+## Proyecto Final de Diplomatura en Programación Aplicada al Internet de las Cosas (IOT)
+
 ### Integrantes:
 * Johel Pastorino
-* Quimeiquipan Antu Fernández Corvalan
-* Agustin Perez
+* Quimeiquipan Antu Fernández Corvalán
+* Agustin Pérez
 
 ### Tareas a realizar 
-* Codigo.  
+* Código.  
 :heavy_check_mark: Configurar WifiClient.  
 :heavy_check_mark: Configurar MQTTClient.  
-:heavy_check_mark: Configuracion de topicos.  
+:heavy_check_mark: Configuration de topics.  
 :heavy_check_mark: Definir salidas de Pin.  
-:heavy_check_mark: Configurar coneccion Wifi en Setup().  
+:heavy_check_mark: Configurar conexión Wifi en Setup().  
 :heavy_check_mark: Configurar Toma de mediciones de Temperatura, Humedad y PH con mediciones Delta.  
-:heavy_check_mark: Configurar control de Motor, Bomba de agua y Aereador.
-:heavy_check_mark: Wifi Manager
+:heavy_check_mark: Configurar control de Motor, Bomba de agua y Aireador.  
 
 * Base de datos:  
 :heavy_check_mark: Configurar usuarios y seguridad.  
-:heavy_check_mark: Configuracion de Tabla.  
+:heavy_check_mark: Configuración de Tabla.  
 
 * Node-Red:  
-:heavy_check_mark: Creacion de Broker MQTT.  
-:heavy_check_mark: Suscripcion a topicos.   
+:heavy_check_mark: Creación de Broker MQTT.  
+:heavy_check_mark: Suscripción a tópicos.   
 :heavy_check_mark: Conversion de topicos a msg MQTT.  
 :heavy_check_mark: Envio de datos a Base de datos.  
-:heavy_check_mark: Configuracion de muestra de datos en Dashboard.
-:heavy_check_mark: Muestra de Alertas en Dashboard  
+:heavy_check_mark: Configuración de muestra de datos en Dashboard.   
 
 * Grafana:  
 :heavy_check_mark: Configurar Base MySQl.  
-:heavy_check_mark: Creacion de Paneles de valores y Alertas.  
+:heavy_check_mark: Creación de Paneles de valores y Alertas.  
 
 
 
