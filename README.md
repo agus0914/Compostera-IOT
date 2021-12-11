@@ -1,6 +1,8 @@
 # Compostera-IOT
 ## Proyecto Final de Diplomatura en Programación Aplicada al Internet de las Cosas (IOT)
 
+Proyecto funcional con fines didacticos. Los sensores estan actualemnte simulados en el codigo y las salidas representadas con LEDs.
+
 ### Integrantes:
 * Johel Pastorino
 * Quimeiquipan Antu Fernández Corvalán
