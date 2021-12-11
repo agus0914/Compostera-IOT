@@ -1,28 +1,13 @@
 #include <Arduino.h>
-#include <DHT.h>
 #include"Timer.h"
-#include <WiFi.h> //<WiFi101.h>
+#include <WiFi.h> 
 #include <MQTT.h>
 
-const char ssid[] = "cotemax_d88";
-const char pass[] = "cotea01264";
+const char ssid[] = "xxx"; // Red Wifi por defecto
+const char pass[] = "xxxx"; // Password de la Red Wifi
 
 WiFiClient net;
 MQTTClient client;
-
-const int freq =5000; // freq for PWM
-const int ledChannel = 0; // channel pwm
-const int resolution = 10; // resolution 8,10,12,15
-
-int brightness = 0;    // how bright the LED is
-int fadeAmount = 5;    // how many points to fade the LED by
-
-long duration;
-float distanceCm;
-#define SOUND_SPEED 0.034
-unsigned long lastTime = 0;
-unsigned long timerDelay = 10000;
-
 
 // Chequeo Wifi, Conecto y suscribo a topicos
 void connect() {
@@ -32,49 +17,23 @@ void connect() {
     delay(1000);
   }
 
-//Conectamos a Wifi
-
   Serial.print("\nconnecting...");
   while (!client.connect("arduino")) { //, "public", "public")) {
     Serial.print(".");
     delay(1000);
-    
   }
-
   Serial.println("\nconnected!");
 
 //Suscribimos a los topicos nodered
-  client.subscribe("brillo"); //Motor con PWM
-  client.subscribe("led1");  // Bomba de agua
-  client.subscribe("led2"); // Aereador
-
-}
-
-void messageReceived(String &topic, String &payload) {
-  Serial.println("incoming: " + topic + " - " + payload);
-  // set the brightness of pin 2:
-  
-  if (topic=="brillo") {
-      ledcWrite(ledChannel, payload.toInt());
-  }  
-  if (topic=="led1") {
-    if (payload=="on") digitalWrite(26, HIGH);
-    if (payload=="off") digitalWrite(26, LOW);
-  }
-  if (topic=="led2") {
-    if (payload=="on") digitalWrite(27, HIGH);
-    if (payload=="off") digitalWrite(27, LOW);
-  }
-  // Note: Do not use the client in the callback to publish, subscribe or
-  // unsubscribe as it may cause deadlocks when other things arrive while
-  // sending and receiving acknowledgments. Instead, change a global variable,
-  // or push to a queue and handle it in the loop after calling `client.loop()`.
+  /*client.subscribe("limiteHumedad"); //Motor con PWM
+  client.subscribe("limiteTemp");  // Bomba de agua*/
+  client.subscribe("LimitePH"); // Aereador
 }
 
 
 
 typedef enum {inicial,espera,midiendo,medido} estadosMed;
-typedef enum {inicial,esperando, trabajo}estadoSalidas;
+typedef enum {inicials,esperando, trabajo}estadoSalidas;
 #define DHTTYPE DHT11
 //===============pines de entrad sensores ===============
 #define pin_dht 34 //este pin tiene que ser digital
@@ -89,9 +48,9 @@ uint32_t tiempoRemover=172800000 ;//dos dias pasado a milli segundos
 float limiteHumedad=60.0;//limite inferior 
 float LimiteTemp=65.0;//limite superior
 
-DHT dht(pin_dht,DHTTYPE);
+//DHT dht(pin_dht,DHTTYPE);
 
-Timer timerTemp,timerHumedad,timerPH,timerMotor;
+Timer timerTemp,timerHumedad,timerPH,timerMotor,timerHAlert,timerTAlert;
 bool MedTemperatura(float& medProbable,float& delta);
 bool MedHumedad(float& medProbable,float& delta);
 bool MedPH(float& medProbable, float& delta );
@@ -102,7 +61,8 @@ void ControlBomba(float humedad);
 
 
 void setup() {
-  dht.begin();
+  //dht.begin();
+
   Serial.begin(115200);
   pinMode(pin_Motor,OUTPUT); // Motor
   pinMode(pin_Aereador,OUTPUT); // Aereador
@@ -110,16 +70,15 @@ void setup() {
   pinMode(pin_PH,INPUT);  //PH
   pinMode(Pin_Tapa,INPUT);  //Tapa
 
-  pinMode(13,INPUT);  // ECHO
-  pinMode(12,OUTPUT); // pulse
-  ledcSetup(ledChannel,freq,resolution);
-  ledcAttachPin(25,ledChannel); // LED1 como PWM
+  
+  //ledcSetup(ledChannel,freq,resolution);
+  //ledcAttachPin(25,ledChannel); // LED1 como PWM
 
   WiFi.begin(ssid, pass);
 
   //Configuro Servidor MQTT node Red
-  client.begin("192.168.1.135", 1883, net);
-  client.onMessage(messageReceived);
+  client.begin("192.168.1.115", 1883, net);
+ // client.onMessage(messageReceived);
   connect();
  
 }
@@ -129,48 +88,47 @@ void loop() {
 
   if (!client.connected()) {
     connect();
-    
-    
+
   }
   //======mediciones=======
-  float medHum , deltaHum;
+  float medHum;
   float medPH  , deltaPH;
   float medTemp, deltaTemp;
 
   bool nuevaTemp, nuevaHum,nuevaPH;
   if(medHum>limiteHumedad){
     //el medidor de ph no funciona si no hay suficiente humedad
-      nuevaPH   = MedPH(medPH,deltaPH);
+     // nuevaPH   = MedPH(medPH,deltaPH);
   }
 
   nuevaTemp = MedTemperatura(medTemp,deltaTemp);
   nuevaHum  = MedHumedad(medHum,deltaTemp);
 
-  
+                                              
   //al haber nuevas mediciones se envian los datos nuevos
-  if (nuevaHum==true&&nuevaTemp==true){  
-    if(nuevaPH==false&&(medHum>limiteHumedad)){
-        // se envia un mensage de error por falta de humedad
-
-    
-      nuevaHum =false;
-      nuevaTemp=false;
-      nuevaPH  =false;
-    }else{
-       //envio de señal mqtt
-
-      nuevaHum =false;
-      nuevaTemp=false;
-      nuevaPH  =false;
-    }
+  
+  //envio de señal mqtt
+  if(nuevaHum){
+    client.publish("humedad",String(medHum));
+    Serial.print("Humedad Guardada");
+    nuevaHum =false;
   }
+  /*if(nuevaPH){
+    client.publish("ph",String(medPH));
+    Serial.print("PH Guardada");
+     nuevaPH  =false;
+  }*/
+  if(nuevaTemp){
+    client.publish("temp",String(medTemp));
+    Serial.print("Temperatura Guardada");
+  }
+
   //=======control de salidas=======
   ControlMotor();
   ControlBomba(medHum);
   ControlAereador(medTemp);
 
 }
-
 
 bool MedTemperatura(float& medProbable,float& delta){
   static estadosMed estado =espera;
@@ -184,14 +142,14 @@ bool MedTemperatura(float& medProbable,float& delta){
     estado=espera;
   }
   if(estado==espera ) {
-    if(timerTemp>1000){
+    if(timerTemp>10000){
       estado=midiendo;
       timerTemp.Set();
     }
      
   }
   if(estado == midiendo) {
-    if(timerTemp>10){
+    if(timerTemp>2000){
       mediciones [cantidadMed]=(100+rand()%200)/10.00;
       //mediciones[cantidadMed]=dht.readTemperature();
      cantidadMed++;
@@ -202,7 +160,6 @@ bool MedTemperatura(float& medProbable,float& delta){
       cantidadMed=0;
     }
    
-
   }
   if (estado == medido) {
     medMax=mediciones[0];
@@ -233,7 +190,6 @@ bool MedTemperatura(float& medProbable,float& delta){
     }
     medProbabable/10;
     */
-    
     timerTemp.Set();
      //=====================================
       Serial.print("medProbable :");
@@ -266,7 +222,7 @@ bool MedHumedad(float& medProbable,float& delta){
 
   }
   if(estado==espera ) {
-    if(timerHumedad>1000){
+    if(timerHumedad>10000){
       estado=midiendo;
       timerHumedad.Set();
       
@@ -274,7 +230,7 @@ bool MedHumedad(float& medProbable,float& delta){
      
   }
   if(estado == midiendo) {
-    if(timerHumedad>10){
+    if(timerHumedad>3000){
       mediciones [cantidadMed]=(200+rand()%800)/10.00;
       //mediciones[cantidadMed]=dht.readHumidity();
       
@@ -349,7 +305,7 @@ bool MedPH(float& medProbable, float& delta){
 
   }
   if(estado==espera ) {
-    if(timerPH>1000){
+    if(timerPH>300000){
       estado=midiendo;
       timerPH.Set();
       
@@ -357,7 +313,7 @@ bool MedPH(float& medProbable, float& delta){
      
   }
   if(estado == midiendo) {
-    if(timerPH>10){
+    if(timerPH>3000){
       mediciones [cantidadMed]=(rand()%140)/10.00;
       /*
       1023 - analogRead(pHpin)) / 73.07;
@@ -423,8 +379,8 @@ bool MedPH(float& medProbable, float& delta){
 }
 
 void ControlMotor(){
-  static estadoSalidas estado = inicial;
-  if (estado==inicial ){
+  static estadoSalidas estado = inicials;
+  if (estado==inicials ){
     timerMotor.Set();
     
     estado = esperando;
@@ -448,13 +404,17 @@ void ControlMotor(){
   
 }
 void ControlAereador(float temperatura){
-  static estadoSalidas estado = inicial;
-  if(estado==inicial){
+  static estadoSalidas estado = inicials;
+  if(estado==inicials){
       estado=esperando;
+      timerTAlert.Set();
+
   }
   if(estado==esperando){
     if(temperatura>LimiteTemp){
       estado =trabajo;
+      if(timerTAlert>10000){
+      }
     }
   }
   if(estado==trabajo){
@@ -467,23 +427,24 @@ void ControlAereador(float temperatura){
 
 }
 void ControlBomba(float humedad){
-  static estadoSalidas estado=inicial;
-  if(estado==inicial){
+  static estadoSalidas estado=inicials;
+  if(estado==inicials){
     estado=esperando;
   }
   if(estado==esperando){
     if(humedad<limiteHumedad){
-      
+      timerHAlert.Set();
       estado=trabajo;
     }
 
   }
   if(estado==trabajo){
     digitalWrite(pin_Bomba,HIGH);
+    if(timerHAlert>10000){
+    }
     if(humedad>limiteHumedad+10){
       digitalWrite(pin_Bomba,LOW);
       estado=esperando;
     }
   }
 }
-
