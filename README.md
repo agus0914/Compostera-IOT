@@ -28,8 +28,8 @@
 :heavy_check_mark: Configuracion de muestra de datos en Dashboard.   
 
 * Grafana:  
-:heavy_check_mark: Configurar Base MySQl  
-:heavy_check_mark: Creacion de Paneles de valores y Alertas  
+:heavy_check_mark: Configurar Base MySQl.  
+:heavy_check_mark: Creacion de Paneles de valores y Alertas.  
 
 
 
