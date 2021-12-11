@@ -8,11 +8,11 @@
 
 ### Tareas a realizar 
 * Codigo.  
-:heavy_check_mark: Configurar WifiClient.
-:heavy_check_mark: Configurar MQTTClient.
-:heavy_check_mark: Configuracion de topicos.
-:heavy_check_mark: Definir salidas de Pin.
-:heavy_check_mark: Configurar coneccion Wifi en Setup().
+:heavy_check_mark: Configurar WifiClient.  
+:heavy_check_mark: Configurar MQTTClient.  
+:heavy_check_mark: Configuracion de topicos.  
+:heavy_check_mark: Definir salidas de Pin.  
+:heavy_check_mark: Configurar coneccion Wifi en Setup().  
 :heavy_check_mark: Configurar Toma de mediciones de Temperatura, Humedad y PH con mediciones Delta.
 :heavy_check_mark: Configurar control de Motor, Bomba de agua y Aereador.
 
