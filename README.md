@@ -7,25 +7,25 @@
 * Agustin Perez
 
 ### Tareas a realizar 
-* Codigo.
-- [x] Configurar WifiClient.
-- [x] Configurar MQTTClient.
-- [x] Configuracion de topicos.
-- [x] Definir salidas de Pin.
-- [x] Configurar coneccion Wifi en Setup().
-- [x] Configurar Toma de mediciones de Temperatura, Humedad y PH con mediciones Delta.
-- [x] Configurar control de Motor, Bomba de agua y Aereador.
+* Codigo.  
+:heavy_check_mark: Configurar WifiClient.
+:heavy_check_mark: Configurar MQTTClient.
+:heavy_check_mark: Configuracion de topicos.
+:heavy_check_mark: Definir salidas de Pin.
+:heavy_check_mark: Configurar coneccion Wifi en Setup().
+:heavy_check_mark: Configurar Toma de mediciones de Temperatura, Humedad y PH con mediciones Delta.
+:heavy_check_mark: Configurar control de Motor, Bomba de agua y Aereador.
 
 * Base de datos:
-- [x] Configurar usuarios y seguridad.
-- [x] Configuracion de Tabla.
+:heavy_check_mark: Configurar usuarios y seguridad.
+:heavy_check_mark: Configuracion de Tabla.
 
 * Node-Red:
-- [x] Creacion de Broker MQTT.
-- [x] Suscripcion a topicos 
-- [x] Conversion de topicos a msg MQTT
-- [x] Envio de datos a Base de datos
-- [x] Configuracion de muestra de datos en Dashboard 
+:heavy_check_mark: Creacion de Broker MQTT.
+:heavy_check_mark: Suscripcion a topicos 
+:heavy_check_mark: Conversion de topicos a msg MQTT
+:heavy_check_mark: Envio de datos a Base de datos
+:heavy_check_mark: Configuracion de muestra de datos en Dashboard 
 
 * Grafana:
 - [x] 
