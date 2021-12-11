@@ -1,7 +1,4 @@
 # Compostera-IOT
-## Proyecto Final de Diplomatura en Programacion Aplicada al Internet de las Cosas (IOT)
-
-# Compostera-IOT
 ## Proyecto Final de Diplomatura en Programación Aplicada al Internet de las Cosas (IOT)
 
 ### Integrantes:
@@ -33,9 +30,5 @@
 * Grafana:  
 :heavy_check_mark: Configurar Base MySQl.  
 :heavy_check_mark: Creación de Paneles de valores y Alertas.  
-
-
-
-
 
 
