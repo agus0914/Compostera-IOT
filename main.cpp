@@ -47,6 +47,7 @@ typedef enum {inicials,esperando, trabajo}estadoSalidas;
 uint32_t tiempoRemover=172800000 ;//dos dias pasado a milli segundos 
 float limiteHumedad=60.0;//limite inferior 
 float LimiteTemp=65.0;//limite superior
+float limitePH=10.0;
 
 //DHT dht(pin_dht,DHTTYPE);
 
@@ -122,9 +123,10 @@ void loop() {
     client.publish("temp",String(medTemp));
     Serial.print("Temperatura Guardada");
     nuevaTemp = false;
-    
   }
-
+if(medPH>limitePH){
+    client.publish("LimitePH",String("1"));
+}
   //=======control de salidas=======
   ControlMotor();
   ControlBomba(medHum);
