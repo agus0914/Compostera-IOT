@@ -98,7 +98,7 @@ void loop() {
   bool nuevaTemp, nuevaHum,nuevaPH;
   if(medHum>limiteHumedad){
     //el medidor de ph no funciona si no hay suficiente humedad
-     // nuevaPH   = MedPH(medPH,deltaPH);
+    nuevaPH   = MedPH(medPH,deltaPH);
   }
 
   nuevaTemp = MedTemperatura(medTemp,deltaTemp);
