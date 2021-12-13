@@ -113,14 +113,16 @@ void loop() {
     Serial.print("Humedad Guardada");
     nuevaHum =false;
   }
-  /*if(nuevaPH){
+  if(nuevaPH){
     client.publish("ph",String(medPH));
     Serial.print("PH Guardada");
      nuevaPH  =false;
-  }*/
+  }
   if(nuevaTemp){
     client.publish("temp",String(medTemp));
     Serial.print("Temperatura Guardada");
+    nuevaTemp = false;
+    
   }
 
   //=======control de salidas=======
